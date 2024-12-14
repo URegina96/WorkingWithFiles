@@ -1,7 +1,5 @@
 package org.example;
-/*
-Этот класс отвечает за получение HTML-кода страницы и парсинг данных о линиях и станциях московского метро.
-*/
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -18,10 +16,10 @@ public class MetroParser {
 
     public List<Line> parseLines(Document doc) {
         List<Line> lines = new ArrayList<>();
-        Elements lineElements = doc.select("div.metro-line"); // CSS-селектор для линий метро
+        Elements lineElements = doc.select("div.js-metro-station"); // Обновите селектор, если нужно
         for (Element lineElement : lineElements) {
-            String name = lineElement.select("span.line-name").text();
-            String number = lineElement.select("span.line-number").text();
+            String name = lineElement.attr("data-line-title");
+            String number = lineElement.attr("data-line-id");
             if (!name.isEmpty() && !number.isEmpty()) {
                 lines.add(new Line(name, number));
             }
@@ -31,12 +29,15 @@ public class MetroParser {
 
     public List<Station> parseStations(Document doc) {
         List<Station> stations = new ArrayList<>();
-        Elements stationElements = doc.select("div.station"); // CSS-селектор для станций
+        Elements stationElements = doc.select("div.js-metro-station");
         for (Element stationElement : stationElements) {
-            String name = stationElement.select("span.station-name").text();
-            String line = stationElement.select("span.station-line").text();
-            if (!name.isEmpty() && !line.isEmpty()) {
-                stations.add(new Station(name, line));
+            Elements stationRows = stationElement.select("span.name");
+            String line = stationElement.attr("data-line-id");
+            for (Element row : stationRows) {
+                String name = row.text();
+                if (!name.isEmpty() && !line.isEmpty()) {
+                    stations.add(new Station(name, line));
+                }
             }
         }
         return stations;
